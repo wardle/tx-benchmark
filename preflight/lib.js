@@ -30,6 +30,19 @@ export function runPreflight(def, baseUrl) {
         const code = r.json()?.issue?.[0]?.code;
         if (code === 'not-found' || code === 'not-supported') return false;
       }
+      // 200 with an "incomplete expansion" issues parameter signalling
+      // that a referenced CodeSystem isn't loaded — semantically the
+      // same as "not supported for this content". The IG defines
+      // tx-issue-type=not-found for exactly this case.
+      if (r.status === 200) {
+        const issuesParam = r.json()?.expansion?.parameter?.find(p => p.name === 'issues');
+        const issues = issuesParam?.resource?.issue ?? [];
+        const notFound = issues.some(i =>
+          i?.details?.coding?.some(c =>
+            c.system === 'http://hl7.org/fhir/tools/CodeSystem/tx-issue-type'
+            && c.code === 'not-found'));
+        if (notFound) return false;
+      }
       return true;
     });
     const supported = check(res, { 'supported': supportedFn });

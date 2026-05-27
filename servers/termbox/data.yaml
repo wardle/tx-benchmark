@@ -1,0 +1,33 @@
+sources:
+  - type: npm
+    location: /data/tx-content/hl7.fhir.uv.ips-2.0.0.tgz
+  - type: npm
+    location: /data/tx-content/hl7.fhir.uv.ips-1.1.0.tgz
+  - type: npm
+    location: /data/tx-content/hl7.fhir.us.core-6.1.0.tgz
+  - type: npm
+    location: /data/tx-content/hl7.fhir.r4.core-4.0.1.tgz
+  - type: npm
+    location: /data/tx-content/hl7.terminology-7.0.1.tgz
+  - type: npm
+    location: /data/tx-content/us.cdc.phinvads-0.12.0.tgz
+  - type: npm
+    location: /data/tx-content/us.nlm.vsac-0.24.0.tgz
+  - type: gallery
+    name: International
+    url: http://snomed.info/sct
+    version: http://snomed.info/sct/900000000000207008/version/20260201
+  - type: gallery
+    name: US
+    url: http://snomed.info/sct
+    version: http://snomed.info/sct/731000124108/version/20260301
+  - type: gallery
+    name: United Kingdom
+    url: http://snomed.info/sct
+    version: http://snomed.info/sct/83821000000107/version/20260211
+  - type: gallery
+    url: http://loinc.org
+    version: "2.82"
+  - type: gallery
+    url: http://www.nlm.nih.gov/research/umls/rxnorm
+    version: "03022026"

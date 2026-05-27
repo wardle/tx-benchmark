@@ -12,7 +12,7 @@ services:
   termbox:
     depends_on:
       - postgres
-    image: healthsamurai/termbox:latest
+    image: healthsamurai/termbox:0.10.1-SNAPSHOT
     pull_policy: always
     ports:
       - "7001:3000"
@@ -23,6 +23,10 @@ services:
       PG_MAINTENANCE_WORK_MEM: 512MB
       LOG_FORMAT: json
       HTTP_BASE_URL: http://localhost:7001
+      DATA_CONFIG_FILE: /data/data.yaml
+    volumes:
+      - ./data.yaml:/data/data.yaml
+      - ../../../.tx-content/tx-benchmark:/data/tx-content
 volumes:
   postgres_data:
     name: termbox_postgres_data

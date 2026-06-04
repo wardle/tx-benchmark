@@ -24,7 +24,7 @@ services:
         for d in /var/hades/snomed.db /var/hades/loinc.db /var/hades/fhir.db; do
           [ -e "$$d" ] && set -- "$$@" "$$d";
         done;
-        exec java -Xmx2g -jar /opt/hades/hades.jar serve --port 8080 "$$@"
+        exec java -Xmx8g -jar /opt/hades/hades.jar serve --port 8080 "$$@"
     ports:
       - "7006:8080"
     volumes:

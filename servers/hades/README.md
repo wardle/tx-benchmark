@@ -37,7 +37,7 @@ The hades service translates each on-disk artefact into a positional
 path passed to `serve`:
 
 ```
-java -Xmx2g -jar hades.jar serve --port 8080 \
+java -Xmx8g -jar hades.jar serve --port 8080 \
   /var/hades/snomed.db \
   /var/hades/loinc.db \
   /var/hades/fhir.db
@@ -45,13 +45,16 @@ java -Xmx2g -jar hades.jar serve --port 8080 \
 
 FHIR packages are built into a single **FTRM SQLite container**
 (`fhir.db`) rather than served in-memory. SQLite is mmap'd, so the
-resident heap stays small (`-Xmx2g` is ample for Hermes' Lucene caches
-+ transient `$expand` working sets), and the indexed/FTS query paths
-are faster than scanning an in-memory corpus on search and intensional
-`$expand`. The in-memory alternative — serving the unpacked package
-directories instead of `fhir.db` — trades that memory for hashmap-hit
-lookups and is the right choice only on large-RAM hosts or for
-request-scoped overlays; see the
+*corpus at rest* lives off-heap, and the indexed/FTS query paths are
+faster than scanning an in-memory corpus on search and intensional
+`$expand`. Heap is still sized at `-Xmx8g`, though: `$expand` builds
+each result set in heap to serialize it, so concurrent large
+expansions (e.g. 200k-member VSAC/PHINVADS value sets) need multiple
+GB regardless of where the corpus is stored — a measured ~6 GB working
+set for 30 concurrent large expansions. The in-memory alternative —
+serving the unpacked package directories instead of `fhir.db` — trades
+that for hashmap-hit lookups and is the right choice only on large-RAM
+hosts or for request-scoped overlays; see the
 [in-memory vs SQLite section](https://github.com/wardle/hades#in-memory-vs-sqlite-container)
 in hades' README.
 

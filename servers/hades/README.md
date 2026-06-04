@@ -26,7 +26,7 @@ The builder service consumes everything under `../../.tx-content/`:
 | ------------------------------------- | ------------------------------------ |
 | `SnomedCT_*.zip`                      | `/var/hades/snomed.db` (Hermes)      |
 | `Loinc_*.zip` / `loinc-*.zip`         | `/var/hades/loinc.db` (FTRM SQLite)  |
-| `*.tgz` (FHIR NPM packages)           | `/var/hades/packages/<id>-<ver>/`    |
+| `*.tgz` (FHIR NPM packages)           | `/var/hades/fhir.db` (FTRM SQLite)   |
 
 Multiple SNOMED zips (intl, US, UK) are imported into the same Hermes DB —
 the composite serves each module/version distinctly.
@@ -37,23 +37,21 @@ The hades service translates each on-disk artefact into a positional
 path passed to `serve`:
 
 ```
-java -Xmx8g -jar hades.jar serve --port 8080 \
+java -Xmx2g -jar hades.jar serve --port 8080 \
   /var/hades/snomed.db \
   /var/hades/loinc.db \
-  /var/hades/packages/hl7.fhir.r4.core-4.0.1/package \
-  /var/hades/packages/hl7.terminology.r4-7.0.1/package \
-  ...
+  /var/hades/fhir.db
 ```
 
-FHIR packages are loaded **in-memory** rather than into SQLite — boot
-takes ~15 s longer, but every CodeSystem / ValueSet / ConceptMap
-lookup becomes a hashmap hit. With six standard HL7 packages this is
-~600 MB of resident heap; the `-Xmx8g` ceiling gives comfortable
-headroom for the in-memory data + Hermes' Lucene mmap caches +
-transient `$expand` working sets. On RAM-constrained hosts, `hades
-import fhir.db <pkg-dirs…>` and `serve … fhir.db` (instead of the
-package directories) keeps the resident footprint to ~80 MB at the
-cost of small per-request JDBC overhead — see the
+FHIR packages are built into a single **FTRM SQLite container**
+(`fhir.db`) rather than served in-memory. SQLite is mmap'd, so the
+resident heap stays small (`-Xmx2g` is ample for Hermes' Lucene caches
++ transient `$expand` working sets), and the indexed/FTS query paths
+are faster than scanning an in-memory corpus on search and intensional
+`$expand`. The in-memory alternative — serving the unpacked package
+directories instead of `fhir.db` — trades that memory for hashmap-hit
+lookups and is the right choice only on large-RAM hosts or for
+request-scoped overlays; see the
 [in-memory vs SQLite section](https://github.com/wardle/hades#in-memory-vs-sqlite-container)
 in hades' README.
 
@@ -67,9 +65,9 @@ hades compact <dest-db>
 
 ## Loading Terminologies
 
-Place each artefact in `tx-benchmark/.tx-content/`. The builder is
-idempotent — it skips packages already extracted and rebuilds the
-SNOMED/LOINC DBs only when `REBUILD_DB=1` or the destination is empty.
+Place each artefact in `tx-benchmark/.tx-content/`. Set `REBUILD_DB=1`
+to drop and rebuild `snomed.db` / `loinc.db` / `fhir.db` from scratch;
+otherwise the builder imports into whatever containers already exist.
 
 ## Known limitations
 
